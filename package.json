@@ -1,0 +1,20 @@
+{
+  "name": "fitvision-ai",
+  "version": "1.0.0",
+  "description": "FitVision AI - premium virtual try-on web app demo with camera fitting, AI styling and Node.js backend.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "virtual-try-on",
+    "fashion-ai",
+    "camera",
+    "body-tracking",
+    "fitvision"
+  ],
+  "author": "FitVision AI",
+  "license": "UNLICENSED"
+}
