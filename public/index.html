@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b74ff" />
+    <title>FitVision AI | Virtual Try-On Studio</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css?v=2" />
+    <script defer src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="/app.js?v=2"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="FitVision AI">
+          <span class="brand-mark">FV</span>
+          <span>
+            <strong>FitVision AI</strong>
+            <small>Virtual Try-On Studio</small>
+          </span>
+        </a>
+
+        <nav class="nav-tabs" aria-label="Asosiy bo'limlar">
+          <button class="nav-tab active" data-scroll-target="studio">Studio</button>
+          <button class="nav-tab" data-scroll-target="catalog">Katalog</button>
+          <button class="nav-tab" data-scroll-target="stylist">Stylist</button>
+          <button class="nav-tab" data-scroll-target="trend">Trend</button>
+        </nav>
+
+        <div class="top-actions">
+          <button class="icon-btn" id="voiceBtn" type="button" title="Voice command">
+            <i data-lucide="mic"></i>
+            <span>Voice</span>
+          </button>
+          <button class="primary-btn" id="shareBtn" type="button">
+            <i data-lucide="send"></i>
+            <span>Share</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="rail" aria-label="Kategoriyalar">
+          <div class="rail-title">Kiyimlar</div>
+          <div class="category-list" id="categoryList"></div>
+        </aside>
+
+        <section class="studio" id="studio">
+          <div class="section-head studio-head">
+            <div>
+              <p class="eyebrow">Live AI fitting</p>
+              <h1>Premium virtual try-on oynasi</h1>
+            </div>
+            <div class="tracking-chip" id="trackingChip">
+              <span class="pulse"></span>
+              <span id="trackingText">Camera ready</span>
+            </div>
+          </div>
+
+          <div class="modebar" role="tablist" aria-label="Try-on rejimlari">
+            <button class="mode active" type="button" data-mode="camera">
+              <i data-lucide="camera"></i>
+              <span>Live</span>
+            </button>
+            <button class="mode" type="button" data-mode="photo">
+              <i data-lucide="image-up"></i>
+              <span>Photo</span>
+            </button>
+            <button class="mode" type="button" data-mode="compare">
+              <i data-lucide="columns-2"></i>
+              <span>Before/After</span>
+            </button>
+          </div>
+
+          <div class="stage-wrap">
+            <div class="tryon-stage" id="tryonStage">
+              <video id="cameraFeed" playsinline muted></video>
+              <img id="photoPreview" alt="Uploaded try-on preview" />
+              <canvas id="tryonCanvas"></canvas>
+              <div class="empty-state" id="emptyState">
+                <div class="empty-orbit">
+                  <i data-lucide="scan-face"></i>
+                </div>
+                <strong>FitVision AI Studio</strong>
+                <span>Kamera yoki rasm yuklang</span>
+              </div>
+              <input class="compare-slider" id="compareSlider" type="range" min="0" max="100" value="58" aria-label="Before after slider" />
+              <div class="watermark">FITVISION AI</div>
+            </div>
+
+            <div class="studio-controls">
+              <button class="primary-btn" id="startCameraBtn" type="button">
+                <i data-lucide="video"></i>
+                <span>Kamerani yoqish</span>
+              </button>
+              <label class="ghost-btn file-btn">
+                <i data-lucide="upload"></i>
+                <span>Rasm yuklash</span>
+                <input id="photoInput" type="file" accept="image/*" />
+              </label>
+              <button class="ghost-btn" id="saveBtn" type="button">
+                <i data-lucide="download"></i>
+                <span>Saqlash</span>
+              </button>
+              <button class="icon-only" id="mirrorBtn" type="button" title="Mirror">
+                <i data-lucide="flip-horizontal-2"></i>
+              </button>
+              <button class="icon-only" id="beautyBtn" type="button" title="Beauty filter">
+                <i data-lucide="sparkles"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="insights">
+          <section class="panel selected-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Selected item</p>
+                <h2 id="selectedName">NeoShell Bomber</h2>
+              </div>
+              <button class="icon-only" id="favoriteBtn" type="button" title="Favorite">
+                <i data-lucide="heart"></i>
+              </button>
+            </div>
+            <div class="selected-art" id="selectedArt"></div>
+            <div class="product-meta" id="selectedMeta"></div>
+          </section>
+
+          <section class="panel size-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">AI Size</p>
+                <h2>Size tavsiya</h2>
+              </div>
+              <span class="mini-badge" id="sizeBadge">M</span>
+            </div>
+            <div class="input-grid">
+              <label>
+                <span>Bo'y</span>
+                <input id="heightInput" type="number" min="90" max="230" value="172" />
+              </label>
+              <label>
+                <span>Vazn</span>
+                <input id="weightInput" type="number" min="15" max="180" value="70" />
+              </label>
+              <label class="full">
+                <span>Tana shakli</span>
+                <select id="shapeInput">
+                  <option value="regular">Regular</option>
+                  <option value="slim">Slim</option>
+                  <option value="athletic">Athletic</option>
+                  <option value="curvy">Curvy</option>
+                  <option value="kids">Kids</option>
+                </select>
+              </label>
+            </div>
+            <button class="primary-btn wide" id="sizeBtn" type="button">
+              <i data-lucide="ruler"></i>
+              <span>Hisoblash</span>
+            </button>
+            <div class="size-result" id="sizeResult"></div>
+          </section>
+
+          <section class="panel mini-scene-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">3D Preview</p>
+                <h2>Fit avatar</h2>
+              </div>
+              <span class="mini-badge">AR</span>
+            </div>
+            <div class="mini-scene" id="miniScene"></div>
+          </section>
+        </aside>
+      </main>
+
+      <section class="catalog-section" id="catalog">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Demo products</p>
+            <h2>Katalog</h2>
+          </div>
+          <div class="filter-pills" id="targetFilters">
+            <button class="filter active" data-target="all">All</button>
+            <button class="filter" data-target="men">Men</button>
+            <button class="filter" data-target="women">Women</button>
+            <button class="filter" data-target="kids">Kids</button>
+          </div>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </section>
+
+      <section class="lower-grid">
+        <div class="panel stylist-panel" id="stylist">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">AI Stylist</p>
+              <h2>Outfit tavsiyasi</h2>
+            </div>
+            <button class="primary-btn" id="stylistBtn" type="button">
+              <i data-lucide="wand-sparkles"></i>
+              <span>Tavsiya</span>
+            </button>
+          </div>
+          <div class="stylist-form">
+            <label>
+              <span>Holat</span>
+              <select id="occasionInput">
+                <option value="daily">Daily</option>
+                <option value="office">Office</option>
+                <option value="street">Streetwear</option>
+                <option value="sport">Sport</option>
+              </select>
+            </label>
+            <label>
+              <span>Ob-havo</span>
+              <select id="weatherInput">
+                <option value="mild">Mild</option>
+                <option value="hot">Hot</option>
+                <option value="cold">Cold</option>
+                <option value="rain">Rain</option>
+              </select>
+            </label>
+          </div>
+          <div class="stylist-output" id="stylistOutput"></div>
+        </div>
+
+        <div class="panel favorites-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Favorites</p>
+              <h2>Sevimlilar</h2>
+            </div>
+            <span class="mini-badge" id="favoriteCount">0</span>
+          </div>
+          <div class="favorite-list" id="favoriteList"></div>
+        </div>
+
+        <div class="panel trend-panel" id="trend">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Fashion intelligence</p>
+              <h2>Trend radar</h2>
+            </div>
+            <span class="mini-badge">Live</span>
+          </div>
+          <div class="trend-list" id="trendList"></div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
